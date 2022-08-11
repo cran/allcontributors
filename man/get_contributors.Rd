@@ -8,7 +8,10 @@ get_contributors(
   org,
   repo,
   type = c("code", "issues", "discussion"),
+  exclude_label = "wontfix",
+  exclude_issues = NULL,
   alphabetical = FALSE,
+  check_urls = TRUE,
   quiet = FALSE
 )
 }
@@ -25,8 +28,19 @@ issues. Discussion contributions are only from individuals not present in
 either 'issues' or 'code'; and 'issues' contributions are only from
 individuals not present in 'code'.}
 
+\item{exclude_label}{Exclude any contributions from issues with specified
+label (default = "wontfix"; set to \code{NULL} or empty string to include all
+issues).}
+
+\item{exclude_issues}{Numbers of any issues (or pull requests) to be excluded
+from lists of contributors.}
+
 \item{alphabetical}{If \code{TRUE}, order contributors alphabetically, otherwise
 order by decreasing numbers of contributions.}
+
+\item{check_urls}{If \code{TRUE} (default), GitHub URLs of all contributors are
+checked to ensure they are still valid. (This is generally the most
+time-consuming stage, so set to 'FALSE' if you are sure all URLs are valid.)}
 
 \item{quiet}{If \code{FALSE}, display progress information on screen.}
 }
@@ -39,3 +53,8 @@ open issues, and contribute to discussions in issues.
 get_contributors (org = "ropenscilabs", repo = "allcontributors")
 }
 }
+\seealso{
+Other main: 
+\code{\link{add_contributors}()}
+}
+\concept{main}

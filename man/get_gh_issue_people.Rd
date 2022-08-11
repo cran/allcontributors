@@ -4,13 +4,25 @@
 \alias{get_gh_issue_people}
 \title{get_gh_issue_people}
 \usage{
-get_gh_issue_people(org, repo)
+get_gh_issue_people(
+  org,
+  repo,
+  exclude_issues = NULL,
+  exclude_label = "wontfix"
+)
 }
 \arguments{
 \item{org}{Github organisation name for repository}
 
 \item{repo}{Repository within \code{org} for which contributors are to be
 extracted}
+
+\item{exclude_issues}{Numbers of any issues (or pull requests) to be excluded
+from lists of contributors.}
+
+\item{exclude_label}{Exclude any contributions from issues with specified
+label (default = "wontfix"; set to \code{NULL} or empty string to include all
+issues).}
 }
 \value{
 List of (authors, contributors), each as character vector of github
@@ -25,3 +37,10 @@ issues for nominated repository
 get_gh_issue_people (org = "ropenscilabs", repo = "allcontributors")
 }
 }
+\seealso{
+Other github: 
+\code{\link{get_gh_code_contributors}()},
+\code{\link{get_gh_contrib_issue}()},
+\code{\link{get_gh_issue_titles}()}
+}
+\concept{github}
