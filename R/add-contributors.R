@@ -17,6 +17,8 @@
 #' issues).
 #' @param exclude_issues Numbers of any issues (or pull requests) to be excluded
 #' from lists of contributors.
+#' @param exclude_not_planned If `TRUE` (default), exclude contributions to any
+#' issues closed as "not planned".
 #' @param num_sections Number of sections in which to divide contributors:
 #' \itemize{
 #' \item{1} All contributions within single section regardless of `type`
@@ -68,6 +70,7 @@ add_contributors <- function (repo = ".",
                               type = c ("code", "issues", "discussion"),
                               exclude_label = "wontfix",
                               exclude_issues = NULL,
+                              exclude_not_planned = TRUE,
                               num_sections = 3,
                               section_names = c (
                                   "Code",
@@ -79,7 +82,7 @@ add_contributors <- function (repo = ".",
                               open_issue = FALSE,
                               force_update = FALSE) {
 
-    if (!git2r::in_repository (repo)) {
+    if (!in_git_repository (repo)) {
         stop ("The path [", repo, "] does not appear to be a git repository")
     }
 
@@ -112,6 +115,7 @@ add_contributors <- function (repo = ".",
         type = type,
         exclude_label = exclude_label,
         exclude_issues = exclude_issues,
+        exclude_not_planned = exclude_not_planned,
         alphabetical = alphabetical,
         quiet = FALSE
     )
@@ -151,15 +155,17 @@ match_type_arg <- function (type) {
 }
 
 get_org_repo <- function (repo) {
-    remote <- git2r::remote_url (repo)
+
+    remote <- gert::git_remote_list (repo)$url
     remote <- remote [grep ("github", remote)] [1]
 
     if (length (remote) != 1) {
         stop ("Repository must have github remote")
     }
 
-    org <- utils::tail (strsplit (remote, "/") [[1]], 2) [1]
-    repo <- utils::tail (strsplit (remote, "/") [[1]], 1) [1]
+    parsed_remote <- parse_github_remotes(remote)
+    org <- parsed_remote[["repo_owner"]]
+    repo <- parsed_remote[["repo_name"]]
 
     list (
         org = org,

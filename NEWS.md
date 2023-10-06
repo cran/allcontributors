@@ -1,8 +1,16 @@
+# v 0.1.1
+
+## Minor changes
+
+- Fix bug in issue contributors when github account no longer exists
+
+---
+
 # v 0.1.0
 
 ## Major changes:
 
-- Add new `exclude_labels` and exclude_issues` parameters to main functions
+- Add new `exclude_labels` and `exclude_issues` parameters to main functions
 
 ## Minor changes:
 
