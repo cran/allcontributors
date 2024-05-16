@@ -2,8 +2,9 @@
 #'
 #' Add contributors to README.Rmd
 #'
-#' @param repo Location of repository for which contributions are to be
-#' extracted. This must be a git project with a github remote.
+#' @param repo Vector of repository locations for which contributions are to be
+#' extracted. Each location must be a git project with a github remote. Default
+#' is single repository in current working directory.
 #' @param ncols Number of columns for contributors in 'README'
 #' @param files Names of files in which to add contributors
 #' @param type Type of contributions to include: 'code' for direct code
@@ -42,6 +43,9 @@
 #' \item{3} "text" for a single line of text containing comma-separated github
 #' user names linked to issue contributions.
 #' }
+#' @param check_urls If `TRUE` (default), GitHub URLs of all contributors are
+#' checked to ensure they are still valid. (This is generally the most
+#' time-consuming stage, so set to 'FALSE' if you are sure all URLs are valid.)
 #' @param open_issue If `TRUE`, open or edit an issue on github in order to
 #' notify all contributors that they've been added to your `README` (see Note).
 #' @param force_update If `TRUE`, update the specified files even if
@@ -78,19 +82,60 @@ add_contributors <- function (repo = ".",
                                   "Issue Contributors"
                               ),
                               format = "grid",
+                              check_urls = TRUE,
                               alphabetical = FALSE,
                               open_issue = FALSE,
                               force_update = FALSE) {
+
+    all_repos <- do.call (rbind, lapply (repo, function (rep) {
+
+        get_contributors_one_repo (
+            repo = rep,
+            type = type,
+            exclude_label = exclude_label,
+            exclude_issues = exclude_issues,
+            exclude_not_planned = exclude_not_planned,
+            num_sections = num_sections,
+            section_names = section_names,
+            format = format,
+            check_urls = check_urls,
+            alphabetical = alphabetical
+        )
+
+    }))
+
+    combined_df <- do.call (rbind, all_repos [, "ctbs"])
+    combined_df$contributions <-
+        stats::ave (combined_df$contributions, combined_df$login, FUN = sum)
+
+    # Remove duplicate rows
+    result <- combined_df [!duplicated (combined_df [c ("logins")]), ]
+
+    chk <- add_contribs_to_files (
+        result, all_repos [, "or"] [[1]], ncols, format, files,
+        open_issue, force_update
+    )
+
+    invisible (unlist (chk))
+}
+
+get_contributors_one_repo <- function (repo,
+                                       type,
+                                       exclude_label,
+                                       exclude_issues,
+                                       exclude_not_planned,
+                                       num_sections,
+                                       section_names,
+                                       format,
+                                       check_urls,
+                                       alphabetical) {
 
     if (!in_git_repository (repo)) {
         stop ("The path [", repo, "] does not appear to be a git repository")
     }
 
-    if (identical (
-        section_names,
-        c ("Code", "Issue Authors", "Issue Contributors")
-    ) &&
-        num_sections < 3) {
+    sec_names_expected <- c ("Code", "Issue Authors", "Issue Contributors")
+    if (identical (section_names, sec_names_expected) && num_sections < 3) {
 
         if (num_sections == 1) {
             section_names <- rep ("", 3)
@@ -117,6 +162,7 @@ add_contributors <- function (repo = ".",
         exclude_issues = exclude_issues,
         exclude_not_planned = exclude_not_planned,
         alphabetical = alphabetical,
+        check_urls = check_urls,
         quiet = FALSE
     )
 
@@ -136,22 +182,18 @@ add_contributors <- function (repo = ".",
 
     ctbs <- rename_default_sections (ctbs)
 
-    chk <- add_contribs_to_files (
-        ctbs, or, ncols, format, files,
-        open_issue, force_update
-    )
-
-    invisible (unlist (chk))
+    return (list (ctbs = ctbs, or = or))
 }
 
 match_type_arg <- function (type) {
+
     if (length (type) > 3) {
         stop (paste0 (
             "There are only three possible types: ",
             "code, issues, and discussion"
         ))
     }
-    c ("code", "issues", "discussion") [seq (length (type))]
+    c ("code", "issues", "discussion") [seq_along (type)]
 }
 
 get_org_repo <- function (repo) {
@@ -163,9 +205,9 @@ get_org_repo <- function (repo) {
         stop ("Repository must have github remote")
     }
 
-    parsed_remote <- parse_github_remotes(remote)
-    org <- parsed_remote[["repo_owner"]]
-    repo <- parsed_remote[["repo_name"]]
+    parsed_remote <- parse_github_remotes (remote)
+    org <- parsed_remote [["repo_owner"]]
+    repo <- parsed_remote [["repo_name"]]
 
     list (
         org = org,
@@ -175,6 +217,7 @@ get_org_repo <- function (repo) {
 
 # strip current list of contributors from filename
 get_current_contribs <- function (filename, orgrepo) {
+
     x <- readLines (filename)
 
     ghurl <- paste0 (
@@ -211,7 +254,7 @@ add_contribs_to_files <- function (ctbs, orgrepo, ncols, format, files,
 
     # files <- file.path (here::here(), files)
     files <- files [which (file.exists (files))]
-    files <- files [grep ("\\.md$|\\.Rmd$", files)]
+    files <- files [grep ("\\.md$|\\.Rmd$|\\.[Q|q]md$", files)]
 
     if (length (files) == 0) {
         stop ("None of theose files exist, or are either '.Rmd' or '.md' files")
@@ -400,7 +443,7 @@ add_one_section <- function (ctbs, orgrepo, ncols,
 
     if (format == "grid") {
         nmax <- ceiling (nrow (ctbs) / ncols)
-        index <- rep (1:nmax, each = ncols) [seq (nrow (ctbs))]
+        index <- rep (1:nmax, each = ncols) [seq_len (nrow (ctbs))]
         ctbs <- split (ctbs, as.factor (index))
     } else {
         ctbs <- list (ctbs)
@@ -419,7 +462,7 @@ add_one_section <- function (ctbs, orgrepo, ncols,
             x <- c (x, "<tr>")
         }
 
-        for (j in seq (nrow (i))) {
+        for (j in seq_len (nrow (i))) {
             href <- NULL
             u <- paste0 (
                 "<a href=\"https://github.com/",

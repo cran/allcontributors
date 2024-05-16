@@ -1,6 +1,19 @@
-# v 0.1.1
+# v0.2.0
+
+## Major changes
+
+- `add_contributors()` now accepts main `repo` parameter as a vector of repository locations to be used to collate a single allcontributors list; thanks to @chartgerink via #35.
+- Chris Hartgerink (@chartgerink) added as new author; thanks to both #35 and #37
 
 ## Minor changes
+
+- Add a rate limit checker for the GitHub API calls. Will warn if rate limit is exceeded (thanks to @chartgerink via #37).
+- Expose `check_urls' parameter in main `add_contributors` function, to allow that to be switched off (thanks to @sbfnk via #38).
+- Add error handling to the URL checking function so failures do not cause function errors (also thanks to @sbfnk via #38).
+
+---
+
+# v 0.1.1
 
 - Fix bug in issue contributors when github account no longer exists
 

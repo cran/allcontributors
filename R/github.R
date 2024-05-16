@@ -5,9 +5,6 @@
 #' @param org Github organisation name for repository
 #' @param repo Repository within `org` for which contributors are to be
 #' extracted
-#' @param check_urls If `TRUE` (default), GitHub URLs of all contributors are
-#' checked to ensure they are still valid. (This is generally the most
-#' time-consuming stage, so set to 'FALSE' if you are sure all URLs are valid.)
 #' @param quiet If `FALSE`, display progress information on screen.
 #' @inheritParams add_contributors
 #'
@@ -296,6 +293,8 @@ get_gh_issue_people <- function (org, repo,
             repo = repo,
             end_cursor = end_cursor
         )
+
+        check_rate_limit ()
         dat <- gh::gh_gql (q)
 
         has_next_page <- dat$data$repository$issues$pageInfo$hasNextPage
@@ -327,8 +326,6 @@ get_gh_issue_people <- function (org, repo,
                 ifelse (length (out) == 0, NA_character_, out)
             }, character (1L))
         )
-
-        author <- dat$node$participants$edges
 
         author_login <- lapply (dat, function (i) {
             edges <- i$node$participants$edges
@@ -446,6 +443,7 @@ get_gh_issue_titles <- function (org, repo) {
             repo = repo,
             end_cursor = end_cursor
         )
+        check_rate_limit ()
         dat <- gh::gh_gql (q)
 
         has_next_page <- dat$data$repository$issues$pageInfo$hasNextPage
@@ -536,4 +534,35 @@ get_gh_contrib_issue <- function (org, repo) {
     })
 
     unlist (pings)
+}
+
+#' Check the GitHub rate limit and warn if exceeded.
+#'
+#' @return `NULL` (invisibly); function called for side-effect of issue warning
+#' message if rate limit exceeded.
+#' @noRd
+check_rate_limit <- function () {
+    gh_state <- tryCatch (gh::gh_rate_limit (), error = NULL)
+
+    # Unauthenticated calls return `NA` values:
+    call_failed <- is.null (gh_state) || is.na (gh_state$remaining) ||
+        is.na (gh_state$limit)
+    if (call_failed) {
+        return (NULL)
+    }
+
+    limit_warn <- 0.1
+    warn_txt <- NULL
+    if (gh_state$remaining / gh_state$limit < limit_warn) {
+        warn_txt <- "You have used > 90% of your GitHub calls..."
+    } else if (gh_state$remaining == 0) {
+        warn_txt <- "The GitHub rate limit has been reached..."
+    }
+    if (!is.null (warn_txt)) {
+        cli::cli_alert_warning (sprintf (
+            "%s It resets in ~%s minutes.",
+            warn_txt,
+            ceiling (difftime (gh_state$reset, Sys.time (), units = "mins"))
+        ))
+    }
 }
