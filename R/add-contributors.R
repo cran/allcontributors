@@ -330,11 +330,13 @@ add_contribs_to_one_file <- function (ctbs, orgrepo, ncols, format, filename) {
         )
     } else {
         contribs_sec <- grep ("^\\#\\#\\sContributors$|^Contributors$", x)
-        if (x [contribs_sec + 1] == "^-+$") {
-            contribs_sec <- contribs_sec + 1
-        }
-        if (x [contribs_sec + 1] == "") {
-            contribs_sec <- contribs_sec + 1
+        if (length (x) > contribs_sec) {
+            if (x [contribs_sec + 1] == "^-+$") {
+                contribs_sec <- contribs_sec + 1
+            }
+            if (x [contribs_sec + 1] == "") {
+                contribs_sec <- contribs_sec + 1
+            }
         }
     }
 
@@ -383,7 +385,7 @@ add_contribs_to_one_file <- function (ctbs, orgrepo, ncols, format, filename) {
             "All contributions to this project are ",
             "gratefully acknowledged using the ",
             "[`allcontributors` package]",
-            "(https://github.com/ropenscilabs/allcontributors)",
+            "(https://github.com/ropensci/allcontributors)",
             " following the ",
             "[all-contributors](https://allcontributors.org) ",
             "specification. ",

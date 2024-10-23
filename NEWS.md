@@ -1,3 +1,18 @@
+# Development
+
+## Major changes
+
+- Repository transferred from `ropenscilabs/allcontributors` -> `ropensci/allcontributors`.
+
+## Minor changes
+
+- Fix URL check to only remove 404s; #45, #46 thanks to @maelle
+- Replace previous explicit REST API calls with `gh`; #44 thanks to @maelle
+- Fix bug #40 when "Contributors" sub-section title is last line of file; thanks to @sbfnk
+- Fix bug #42 with Rest API calls for code contributions; thanks to @maelle
+
+---
+
 # v0.2.0
 
 ## Major changes

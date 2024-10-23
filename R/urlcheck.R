@@ -102,7 +102,15 @@ check_github_urls <- function (ctbs, quiet = FALSE) {
             out [[i]] <- hs [[i]]$status_code
         }
     }
-    index <- which (unlist (out) == 200L)
+    index <- which (unlist (out) != 404)
 
     return (ctbs [index, ])
+}
+
+get_gh_token <- function (token = "") {
+
+    tryCatch (
+        gitcreds::gitcreds_get ()$password,
+        error = function (e) ""
+    )
 }

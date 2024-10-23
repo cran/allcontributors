@@ -10,7 +10,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' get_contributors (org = "ropenscilabs", repo = "allcontributors")
+#' get_contributors (org = "ropensci", repo = "allcontributors")
 #' }
 #' @family main
 #' @export
@@ -113,74 +113,35 @@ get_contributors <- function (org, repo,
 #'
 #' @examples
 #' \dontrun{
-#' get_gh_code_contributors (org = "ropenscilabs", repo = "allcontributors")
+#' get_gh_code_contributors (org = "ropensci", repo = "allcontributors")
 #' }
 #' @family github
 #' @export
 get_gh_code_contributors <- function (org, repo, alphabetical = FALSE) {
-
-    tok <- get_gh_token ()
-    if (length (tok) == 0) {
-        tok <- ""
-    }
-
     # This query can not be done via GraphQL, so have to use v3 REST API
-    u <- paste0 (
-        "https://api.github.com/repos/",
+    endpoint <- paste0 (
+        "/repos/",
         org,
         "/",
         repo,
         "/contributors"
     )
 
-    per_page <- 100L
-    pagenum <- 1L
-    params <- list (per_page = per_page, page = pagenum)
+    res <- gh::gh (endpoint, .limit = Inf)
 
-    req <- httr2::request (u)
-    if (nchar (tok) > 0L) {
-        headers <- list (Authorization = paste0 ("Bearer ", tok))
-        req <- httr2::req_headers (req, "Authorization" = headers)
-    }
-    req <- httr2::req_body_json (req, params)
-    req <- httr2::req_method (req, "GET")
-
-    resp <- httr2::req_perform (req)
-    httr2::resp_check_status (resp)
-
-    x <- httr2::resp_body_json (resp, simplifyVector = TRUE)
-
-    res <- x
-    while (length (x) == per_page) {
-        params$page <- params$page + 1L
-        req <- httr2::req_body_json (req, params)
-
-        resp <- httr2::req_perform (req)
-        httr2::resp_check_status (resp)
-
-        x <- httr2::resp_body_json (resp, simplifyVector = TRUE)
-        res <- c (res, x)
-    }
-
-    index <- seq_len (nrow (res))
-    if (alphabetical) {
-        index <- order (res$login)
-    }
-
-    data.frame (
-        logins = res$login,
-        contributions = res$contributions,
-        avatar = res$avatar_url,
+    out <- data.frame (
+        logins = map_chr (res, "login"),
+        contributions = map_chr (res, "contributions"),
+        avatar = map_chr (res, "avatar_url"),
         stringsAsFactors = FALSE
-    ) [index, ]
-}
-
-get_gh_token <- function (token = "") {
-
-    tryCatch (
-        gitcreds::gitcreds_get ()$password,
-        error = function (e) ""
     )
+
+    if (alphabetical) {
+        out [order (res$login), ]
+    } else {
+        out
+    }
+
 }
 
 get_git_user <- function () {
@@ -271,7 +232,7 @@ get_issues_qry <- function (org, repo, end_cursor = NULL) {
 #'
 #' @examples
 #' \dontrun{
-#' get_gh_issue_people (org = "ropenscilabs", repo = "allcontributors")
+#' get_gh_issue_people (org = "ropensci", repo = "allcontributors")
 #' }
 #' @family github
 #' @export
@@ -428,7 +389,7 @@ get_gh_issue_people <- function (org, repo,
 #'
 #' @examples
 #' \dontrun{
-#' get_gh_issue_titles (org = "ropenscilabs", repo = "allcontributors")
+#' get_gh_issue_titles (org = "ropensci", repo = "allcontributors")
 #' }
 #' @family github
 #' @export
@@ -480,7 +441,7 @@ get_gh_issue_titles <- function (org, repo) {
 #'
 #' @examples
 #' \dontrun{
-#' get_gh_contrib_issue (org = "ropenscilabs", repo = "allcontributors")
+#' get_gh_contrib_issue (org = "ropensci", repo = "allcontributors")
 #' }
 #' @family github
 #' @export
@@ -494,10 +455,8 @@ get_gh_contrib_issue <- function (org, repo) {
         return (NULL)
     }
 
-    tok <- get_gh_token ()
-
-    u <- paste0 (
-        "https://api.github.com/repos/",
+    endpoint <- paste0 (
+        "/repos/",
         org,
         "/",
         repo,
@@ -505,28 +464,13 @@ get_gh_contrib_issue <- function (org, repo) {
         issue_num
     )
 
-    req <- httr2::request (u)
-
-    if (nchar (tok) > 0) {
-        headers <- list (Authorization = paste0 ("Bearer ", tok))
-        req <- httr2::req_headers (req, "Authorization" = headers)
-    }
-    params <- list (state = "all", per_page = 100, page = 1)
-    req <- httr2::req_body_json (req, params)
-    req <- httr2::req_method (req, "GET")
-
-    resp <- httr2::req_perform (req)
-    httr2::resp_check_status (resp)
-
-    x <- httr2::resp_body_json (resp, simplifyVector = TRUE)
+    x <- gh::gh (endpoint, .limit = Inf)
     cmts <- x$body
 
     # That's just the body of the opening comment; the following lines extract
     # all subsequent comments:
-    req <- httr2::req_url_path_append (req, "comments")
-    resp <- httr2::req_perform (req)
-    httr2::resp_check_status (resp)
-    x <- httr2::resp_body_json (resp, simplifyVector = TRUE)
+    endpoint <- paste0 (endpoint, "/comments")
+    x <- gh::gh (endpoint, .limit = Inf)
     cmts <- c (cmts, x$body)
 
     pings <- lapply (cmts, function (i) {
@@ -565,4 +509,8 @@ check_rate_limit <- function () {
             ceiling (difftime (gh_state$reset, Sys.time (), units = "mins"))
         ))
     }
+}
+
+map_chr <- function (x, field) {
+    unname (unlist (lapply (x, "[", field)))
 }
