@@ -2,5 +2,5 @@
 library (allcontributors)
 
 ## ----short, eval = FALSE------------------------------------------------------
-#  add_contributors (num_sectons = 1, format = "text")
+# add_contributors (num_sections = 1, format = "text")
 

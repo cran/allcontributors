@@ -1,4 +1,18 @@
-# Development
+# v0.2.3
+
+## Major changes
+
+- Added a [GitHub workflow](https://github.com/ropensci/allcontributors/blob/main/.github/workflows/allcontributors.yml) to automatically run `add_contributors()`
+
+## Minor changes
+
+- Updated documentation to described different ways of keeping allcontributors lists up-to-date (#15; thanks to @maelle)
+- Remove any "-bot" contributors from list ("actions-bot", "ropensci-review-bot", and similar)
+- Exclude 'github.com/ghost' from contributors (#58; thanks to @kellijohnson-NOAA)
+
+---
+
+# v0.2.2
 
 ## Major changes
 

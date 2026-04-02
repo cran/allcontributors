@@ -1,6 +1,6 @@
 Package: allcontributors
 Title: Acknowledge all Contributors to a Project
-Version: 0.2.2
+Version: 0.2.3
 Authors@R: c(
     person("Mark", "Padgham", , "mark.padgham@email.com", role = c("aut", "cre")),
     person("Chris", "Hartgerink", role = "aut"),
@@ -19,12 +19,13 @@ Suggests: httptest2, knitr, rmarkdown, testthat
 VignetteBuilder: knitr
 Encoding: UTF-8
 Language: en-GB
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
+Config/ropensci/maintainer: staff
 NeedsCompilation: no
-Packaged: 2024-10-23 12:17:43 UTC; smexus
+Packaged: 2026-04-02 10:21:26 UTC; smexus
 Author: Mark Padgham [aut, cre],
   Chris Hartgerink [aut],
   Maëlle Salmon [ctb]
 Maintainer: Mark Padgham <mark.padgham@email.com>
 Repository: CRAN
-Date/Publication: 2024-10-23 14:40:02 UTC
+Date/Publication: 2026-04-02 10:50:07 UTC
